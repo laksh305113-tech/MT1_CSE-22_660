@@ -1,9 +1,16 @@
 const express = require("express");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && "body" in error) {
+    return res.status(400).json({ message: "Invalid JSON" });
+  }
+  return next(error);
+});
 
 let products = [];
 let nextId = 1;
@@ -115,6 +122,10 @@ app.delete("/api/products/:id", (req, res) => {
   return res.status(200).json(deletedProduct);
 });
 
-app.listen(PORT, () => {
-  console.log(`Products API running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Products API running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
